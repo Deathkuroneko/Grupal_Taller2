@@ -17,29 +17,40 @@ public class RetroPanel extends JPanel {
         this.imageService = service;
         this.mainView = view;
 
-        // 1. Configuración Visual (Eliminamos el fondo fijo para que use el tema oscuro)
+        // 1. Configuración Visual
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         this.setBorder(new EmptyBorder(5, 5, 5, 5));
         this.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // 2. Contenedor del Filtro (Usamos un panel interno para poder ocultarlo/mostrarlo)
+        // 2. Contenedor del Filtro
         JPanel content = new JPanel();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         
-        // --- SLIDER ---
+        // --- COMBOBOX ---
         JLabel lblNiveles = new JLabel("Niveles de posterización:");
         lblNiveles.setAlignmentX(Component.CENTER_ALIGNMENT);
         lblNiveles.setFont(new Font("SansSerif", Font.PLAIN, 11));
         content.add(lblNiveles);
         
+        content.add(Box.createVerticalStrut(5));
+
+        Integer[] nivelesOpciones = {2, 4, 8, 64, 128, 255};
+        JComboBox<Integer> comboN = new JComboBox<>(nivelesOpciones);
+        comboN.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        content.add(comboN);
+
         content.add(Box.createVerticalStrut(10));
 
-        JSlider sliderN = new JSlider(2, 10, 5);
-        sliderN.setMajorTickSpacing(1);
-        sliderN.setPaintTicks(true);
-        sliderN.setPaintLabels(true);
-        // Quitamos setBackground fijo para que sea transparente al tema
-        content.add(sliderN);
+        // --- CHECKBOXES ---
+        JPanel checkPanel = new JPanel();
+        checkPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+        JCheckBox chkR = new JCheckBox("R", true);
+        JCheckBox chkG = new JCheckBox("G", true);
+        JCheckBox chkB = new JCheckBox("B", true);
+        checkPanel.add(chkR);
+        checkPanel.add(chkG);
+        checkPanel.add(chkB);
+        content.add(checkPanel);
 
         content.add(Box.createVerticalStrut(15));
 
@@ -48,8 +59,6 @@ public class RetroPanel extends JPanel {
         btnAplicarRetro.setAlignmentX(Component.CENTER_ALIGNMENT);
         btnAplicarRetro.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
         btnAplicarRetro.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
-        // Estilo FlatLaf para botones de acción
         btnAplicarRetro.putClientProperty("JButton.buttonType", "roundRect");
         content.add(btnAplicarRetro);
 
@@ -62,7 +71,6 @@ public class RetroPanel extends JPanel {
         btnHeader.setContentAreaFilled(false);
         btnHeader.setFont(new Font("SansSerif", Font.BOLD, 12));
 
-        // Agregar al panel principal
         this.add(btnHeader);
         this.add(content);
 
@@ -70,7 +78,6 @@ public class RetroPanel extends JPanel {
         // EVENTOS
         // =========================
 
-        // Lógica de colapsar
         btnHeader.addActionListener(e -> {
             boolean visible = content.isVisible();
             content.setVisible(!visible);
@@ -78,10 +85,14 @@ public class RetroPanel extends JPanel {
             this.revalidate();
         });
 
-        // Aplicar Filtro
         btnAplicarRetro.addActionListener(e -> {
-            int n = sliderN.getValue();
-            BufferedImage resultado = imageService.aplicarRetro(n);
+            int n = (Integer) comboN.getSelectedItem();
+            String canales = "";
+            if (chkR.isSelected()) canales += "R";
+            if (chkG.isSelected()) canales += "G";
+            if (chkB.isSelected()) canales += "B";
+
+            BufferedImage resultado = imageService.aplicarRetro(n, canales);
 
             if (resultado != null) {
                 mainView.getImagePanel().setImagen(resultado);
