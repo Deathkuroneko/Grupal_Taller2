@@ -9,7 +9,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 
 import service.ImagenService;
-import ui.ControlsPanel;
+import ui.RetroPanel;
 import ui.DegradadosPanel;
 import ui.ImagePanel;
 
@@ -39,7 +39,7 @@ public class MainView extends JFrame {
         JTabbedPane tabs = new JTabbedPane();
 
         // 🟢 Retro
-        ControlsPanel retroPanel = new ControlsPanel(service, this);
+        RetroPanel retroPanel = new RetroPanel(service, this);
         tabs.addTab("Retro", retroPanel);
 
         // 🔵 Degradados

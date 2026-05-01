@@ -60,9 +60,9 @@ public class Degradados {
                 double dist = Math.sqrt(Math.pow(x - cx, 2) + Math.pow(y - cy, 2));
                 float factor = (float)(dist / maxDist);
 
-                r = (int)(r * (1 - factor));
-                g = (int)(g * (1 - factor));
-                b = (int)(b * (1 - factor));
+                r = (int)(r + (255 - r) * (1 - factor));
+                g = (int)(g + (255 - g)* (1 - factor));
+                b = (int)(b + (255 - b)  * (1 - factor));
 
                 int pixeln = (a << 24) | (r << 16) | (g << 8) | b;
                 out.setRGB(x, y, pixeln);
