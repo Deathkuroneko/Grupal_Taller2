@@ -19,6 +19,9 @@ import service.ImagenService;
 import ui.TopPanel;
 import ui.RetroPanel;
 import ui.DegradadosPanel;
+import ui.VidrioPanel;
+import ui.BlancoNegroPanel;
+import ui.EscalaGrisesNPanel;
 import ui.ImagePanel;
 
 public class MainView extends JFrame {
@@ -59,9 +62,23 @@ public class MainView extends JFrame {
         sidebar.add(degradadoPanel);
         sidebar.add(Box.createVerticalStrut(15));
 
-        
         // 🔴 Aquí irán tus 11 filtros nuevos agrupados en otros paneles...
         // Ejemplo: sidebar.add(new FiltrosColorPanel(service, this));
+
+        VidrioPanel vidrioPanel = new VidrioPanel(service, this);
+        vidrioPanel.setBorder(new TitledBorder("Texturas"));
+        sidebar.add(vidrioPanel);
+        sidebar.add(Box.createVerticalStrut(15));
+
+        BlancoNegroPanel bnPanel = new BlancoNegroPanel(service, this);
+        bnPanel.setBorder(new TitledBorder("Básico"));
+        sidebar.add(bnPanel);
+        sidebar.add(Box.createVerticalStrut(15));
+
+        EscalaGrisesNPanel grisesPanel = new EscalaGrisesNPanel(service, this);
+        grisesPanel.setBorder(new TitledBorder("Escala de Grises"));
+        sidebar.add(grisesPanel);
+        sidebar.add(Box.createVerticalStrut(15));
 
         // 3. Scroll para el menú lateral (Evita que los 11 filtros se corten)
         JScrollPane scrollFiltros = new JScrollPane(sidebar);

@@ -2,6 +2,9 @@ package service;
 
 import filtros.Degradados;
 import filtros.Retro;
+import filtros.VidrioEsmerilado;
+import filtros.BlancoNegro;
+import filtros.EscalaGrisesN;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
@@ -26,10 +29,28 @@ public class ImagenService {
     }
 
     // Aplica el filtro y actualiza el estado
-    public BufferedImage aplicarRetro(int niveles) {
+    public BufferedImage aplicarRetro(int niveles, String canales) {
         if (imagenOriginal == null) return null;
-        System.out.println("N = " + niveles);
-        this.imagenActual = Retro.aplicarRetro(imagenOriginal, niveles);
+        System.out.println("N = " + niveles + " Canales = " + canales);
+        this.imagenActual = Retro.aplicarRetro(imagenOriginal, niveles, canales);
+        return imagenActual;
+    }
+
+    public BufferedImage aplicarVidrioEsmerilado() {
+        if (imagenActual == null) return null;
+        this.imagenActual = VidrioEsmerilado.aplicar(imagenActual);
+        return imagenActual;
+    }
+
+    public BufferedImage aplicarBlancoNegro() {
+        if (imagenActual == null) return null;
+        this.imagenActual = BlancoNegro.aplicar(imagenActual);
+        return imagenActual;
+    }
+
+    public BufferedImage aplicarEscalaGrisesN(int n) {
+        if (imagenActual == null) return null;
+        this.imagenActual = EscalaGrisesN.aplicar(imagenOriginal, n);
         return imagenActual;
     }
 

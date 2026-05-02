@@ -4,7 +4,7 @@ import java.awt.image.BufferedImage;
 
 public class Retro {
     // Cambiamos a que retorne BufferedImage y sea estático
-    public static BufferedImage aplicarRetro(BufferedImage img, int N) {
+    public static BufferedImage aplicarRetro(BufferedImage img, int N, String canales) {
         int w = img.getWidth();
         int h = img.getHeight();
         BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
@@ -21,9 +21,9 @@ public class Retro {
                 // Aplicamos la cuantización (recomiendo usar N-1 > 0 para evitar /0)
                 int factor = (N > 1) ? N - 1 : 1;
                 
-                r = (int)(Math.round(r / 255.0 * (N - 1)) * (255.0 / (N - 1)));
-                g = (int)(Math.round(g / 255.0 * (N - 1)) * (255.0 / (N - 1)));
-                b = (int)(Math.round(b / 255.0 * (N - 1)) * (255.0 / (N - 1)));
+                r = canales.contains("R") ? (int)(Math.round(r / 255.0 * factor) * (255.0 / factor)) : 0;
+                g = canales.contains("G") ? (int)(Math.round(g / 255.0 * factor) * (255.0 / factor)) : 0;
+                b = canales.contains("B") ? (int)(Math.round(b / 255.0 * factor) * (255.0 / factor)) : 0;
 
                 int pixeln = (a << 24) | (r << 16) | (g << 8) | b;
                 out.setRGB(x, y, pixeln);
