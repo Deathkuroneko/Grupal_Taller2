@@ -1,707 +1,286 @@
 package frame;
 
+import panel.*;
+import service.ImagenService;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import javax.imageio.ImageIO;
 import com.formdev.flatlaf.FlatClientProperties;
 
-import filtros.Kernels;
-import service.ImagenService;
-
+@SuppressWarnings("serial")
 public class MainFrame extends JFrame {
 
-	private static final long serialVersionUID = 1L;
 	private JLabel lblDigital;
+	private JLabel lblIntensidad;
 	private JSlider sliderNiveles;
-	private String filtroActual = "RETRO";
-	private Font fuenteDigital;
 
 	private ImagenService imagenService = new ImagenService();
-	private VisorImagenInteligente visorInteligente;
-	// Esta variable guardará el último tipo de degradado que el usuario pulsó
-	private String ultimoDegradado = "IZQ_DER";
-	private Color ultimoColorSeleccionado = new Color(255, 140, 0); // Naranja por defecto
-	private JSpinner spinSaturacion;
-	private JSpinner spinBrillo;
-	private JSpinner spinOpacidad;
-	private final String[] NOMBRES_COLORES = { "NARANJA", "VERDE FOREST", "AZUL MODERNO", "PURPURA", "CARMESI",
-			"GRIS SEPIA", "ROSA FUCSIA", "CIAN ELECTRICO", "DORADO", "INDIGO", "VERDE PRIMAVERA", "TOMATE",
-			"AZUL PASTEL", "CAQUI", "GRIS PIZARRA", "MARRON CUERO", "VERDE NEON", "MAGENTA", "AZUL ELECTRICO", " SIENA",
-			"AZUL PASTEL" };
+	private VisorImagenPanel visor;
 
-	// Atributos de la clase MainFrame
-	private String ultimoNombreColor = "NINGUNO";
-	private String canalActual = "RGB";
-
-	private float[] kernelActual = Kernels.kNormal;
-	private String nombreKernelActual = "NORMAL";
-	
-	private JLabel lblIntensidad;
+	private Map<String, FiltroConfigurable> filtros = new HashMap<>();
+	private FiltroConfigurable filtroActivo;
 
 	public MainFrame() {
-		this.fuenteDigital = cargarFuenteDigital();
-
 		setTitle("Editor de Fotos - UCE PhotoSystem");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setSize(1150, 750);
-		setResizable(false);
+		setSize(1200, 800);
 		setLocationRelativeTo(null);
-		setIconImage(new ImageIcon(getClass().getResource("/icons/camara-de-fotos.png")).getImage());
-		getContentPane().setLayout(new BorderLayout());
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
+		setLayout(new BorderLayout());
 
-		// --- PANEL SUPERIOR ---
-		JPanel panelSuperior = new JPanel(new BorderLayout());
-		panelSuperior.setBackground(new Color(20, 20, 20));
-		panelSuperior.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+		// Icono de la ventana
+		try {
+			setIconImage(new ImageIcon(getClass().getResource("/icons/camara-de-fotos.png")).getImage());
+		} catch (Exception e) {
+			System.out.println("Icono principal no encontrado");
+		}
 
-		JPanel panelLCD = new JPanel(new FlowLayout(FlowLayout.CENTER));
-		panelLCD.setBackground(Color.BLACK);
-		panelLCD.setBorder(new LineBorder(new Color(0, 50, 0), 2, true));
+		// Inicialización de componentes en orden lógico
+		initTopPanel();
+		initCenterPanel();
+		initBottomTabs(); // Registra los filtros en el mapa
+		initLeftPanel(); // Crea el slider y los botones rápidos
 
-		lblDigital = new JLabel(" ESPERANDO IMAGEN... ");
-		lblDigital.setForeground(new Color(0, 255, 0));
-		lblDigital.setFont(fuenteDigital);
-		panelLCD.add(lblDigital);
+		// Estado inicial
+		filtroActivo = filtros.get("RETRO");
+		if (filtroActivo != null) {
+			filtroActivo.configurarSlider(sliderNiveles, lblIntensidad);
+			actualizarPantallaLCD();
+		}
+	}
 
-		JPanel panelBotonesTop = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 5));
-		panelBotonesTop.setOpaque(false);
+	private void initTopPanel() {
+		JPanel top = new JPanel(new BorderLayout());
+		top.setBackground(new Color(20, 20, 20));
+		top.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
 
-		JButton btnAbrir = crearBotonCircular("/icons/abrir.png", "Abrir");
-		btnAbrir.addActionListener(e -> accionAbrir());
+		// Pantalla LCD
+		JPanel lcd = new JPanel();
+		lcd.setBackground(Color.BLACK);
+		lcd.setBorder(new LineBorder(new Color(0, 50, 0), 2, true));
 
-		JButton btnGuardar = crearBotonCircular("/icons/save.png", "Guardar");
-		btnGuardar.addActionListener(e -> accionGuardar());
+		lblDigital = new JLabel(" ESPERANDO IMAGEN ");
+		lblDigital.setForeground(Color.GREEN);
+		lcd.add(lblDigital);
 
-		JButton btnReset = crearBotonCircular("/icons/reset.png", "Reset");
-		btnReset.addActionListener(e -> accionReset());
+		lblDigital.setFont(new Font("DialogInput", Font.BOLD, 16));
 
-		panelBotonesTop.add(btnAbrir);
-		panelBotonesTop.add(btnGuardar);
-		panelBotonesTop.add(btnReset);
+		// Botones de archivo
+		JPanel acciones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
+		acciones.setOpaque(false);
 
-		panelSuperior.add(panelLCD, BorderLayout.WEST);
-		panelSuperior.add(panelBotonesTop, BorderLayout.EAST);
-		getContentPane().add(panelSuperior, BorderLayout.NORTH);
+		acciones.add(new BotonCircular("/icons/abrir.png", "Abrir", e -> abrir()));
+		acciones.add(new BotonCircular("/icons/save.png", "Guardar", e -> guardar()));
+		acciones.add(new BotonCircular("/icons/reset.png", "Reset", e -> reset()));
 
-		// --- PANEL DE CONTROLES (IZQUIERDA) ---
-		JPanel panelControles = new JPanel();
-		panelControles.setPreferredSize(new Dimension(300, 0));
-		panelControles.setBackground(new Color(35, 35, 35));
-		panelControles.setLayout(new BoxLayout(panelControles, BoxLayout.Y_AXIS));
-		panelControles.setBorder(BorderFactory.createEmptyBorder(25, 20, 25, 20));
+		top.add(lcd, BorderLayout.WEST);
+		top.add(acciones, BorderLayout.EAST);
+		add(top, BorderLayout.NORTH);
+	}
 
-		JLabel lblTituloFiltro = new JLabel("CONTROLES");
-		lblTituloFiltro.setFont(new Font("Serif", Font.BOLD, 22));
-		lblTituloFiltro.setForeground(new Color(212, 175, 55));
-		lblTituloFiltro.setAlignmentX(Component.CENTER_ALIGNMENT);
+	private void initLeftPanel() {
+		JPanel left = new JPanel();
+		left.setPreferredSize(new Dimension(260, 0));
+		left.setBackground(new Color(35, 35, 35));
+		left.setLayout(new BoxLayout(left, BoxLayout.Y_AXIS));
+		left.setBorder(BorderFactory.createEmptyBorder(20, 15, 20, 15));
 
-		sliderNiveles = new JSlider(2, 10, 5);
-		sliderNiveles.setMajorTickSpacing(1);
-		sliderNiveles.setPaintTicks(true);
-		sliderNiveles.setPaintLabels(true);
-		sliderNiveles.setBackground(new Color(35, 35, 35));
+		JLabel titulo = new JLabel("CONTROLES");
+		titulo.setForeground(new Color(212, 175, 55));
+		titulo.setFont(new Font("Verdana", Font.BOLD, 14));
+		titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+		lblIntensidad = new JLabel("Ajuste:");
+		// Para los Botones y Labels del Slider (Legibilidad máxima)
+		lblIntensidad.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+		lblIntensidad.setForeground(Color.WHITE);
+
+		// Configuración del Slider
+		sliderNiveles = new JSlider(1, 10, 5);
+		sliderNiveles.setBackground(left.getBackground());
 		sliderNiveles.setForeground(Color.WHITE);
-		sliderNiveles.addChangeListener(e -> actualizarPantalla());
+		sliderNiveles.addChangeListener(e -> {
 
-		JButton btnAplicar = new JButton("APLICAR");
-		btnAplicar.setPreferredSize(new Dimension(150, 150));
-		btnAplicar.setMaximumSize(new Dimension(150, 150));
+			// Actualización dinámica del label de intensidad
+			String base = lblIntensidad.getText();
+			if (base.contains(":")) {
+				lblIntensidad.setText(base.substring(0, base.indexOf(":") + 1) + " " + sliderNiveles.getValue());
+			}
+		});
+
+		// --- NUEVA SECCIÓN: EFECTOS DIRECTOS ---
+		JLabel lblRapido = new JLabel("EFECTOS DIRECTOS");
+		lblRapido.setForeground(Color.GRAY);
+		lblRapido.setFont(new Font("SansSerif", Font.BOLD, 10));
+		lblRapido.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+		JPanel gridBotones = new JPanel(new GridLayout(2, 2, 8, 8));
+		gridBotones.setOpaque(false);
+		gridBotones.setMaximumSize(new Dimension(220, 100));
+
+		gridBotones.add(crearBotonFiltroRapido("B / N", "B/N"));
+		gridBotones.add(crearBotonFiltroRapido("GRISES", "GRISES"));
+		gridBotones.add(crearBotonFiltroRapido("NEGATIVO", "NEGATIVO"));
+		gridBotones.add(crearBotonFiltroRapido("ESM", "ESMERILADO"));
+		// ---------------------------------------
+
+		JButton btnAplicar = new JButton("APLICAR CAMBIOS");
 		btnAplicar.setBackground(new Color(180, 20, 20));
 		btnAplicar.setForeground(Color.WHITE);
-		btnAplicar.putClientProperty(FlatClientProperties.STYLE, "arc: 999; borderWidth: 4; borderColor: #1a1a1a");
+		btnAplicar.setFont(new Font("SansSerif", Font.BOLD, 12));
 		btnAplicar.setAlignmentX(Component.CENTER_ALIGNMENT);
-		btnAplicar.addActionListener(e -> accionEjecutarFiltro());
+		btnAplicar.setMaximumSize(new Dimension(200, 40));
+		btnAplicar.putClientProperty(FlatClientProperties.STYLE, "arc:999");
+		btnAplicar.addActionListener(e -> aplicarFiltro());
 
-		panelControles.add(lblTituloFiltro);
-		panelControles.add(Box.createVerticalStrut(40));
-		lblIntensidad = new JLabel("Intensidad:");
-		panelControles.add(lblIntensidad);
-		panelControles.add(sliderNiveles);
-		panelControles.add(Box.createVerticalGlue());
-		panelControles.add(btnAplicar);
+		// Ensamblado del panel izquierdo
+		left.add(titulo);
+		left.add(Box.createVerticalStrut(25));
+		left.add(lblIntensidad);
+		left.add(sliderNiveles);
+		left.add(Box.createVerticalStrut(30));
+		left.add(lblRapido);
+		left.add(Box.createVerticalStrut(10));
+		left.add(gridBotones);
+		left.add(Box.createVerticalGlue());
+		left.add(btnAplicar);
 
-		getContentPane().add(panelControles, BorderLayout.WEST);
-
-		// --- PESTAÑAS DE FILTROS (SUR) ---
-		JTabbedPane tabsFiltros = new JTabbedPane();
-		tabsFiltros.addTab("Retro", crearPanelRetro());
-		tabsFiltros.addTab("Degradados", crearPanelDegradados());
-		tabsFiltros.addTab("Color", crearPanelColor());
-		tabsFiltros.addTab("HSV", crearPanelHSV());
-		tabsFiltros.addTab("B/N", crearPanelBN());
-		tabsFiltros.addTab("NEGATIVO", crearPanelNegativo());
-		tabsFiltros.addTab("REDUCIR BITS", crearPanelEscalaReducirBits());
-		tabsFiltros.addTab("GRISES", crearPanelEscalaGris()); // Antes decía "Escala de Grises"
-		tabsFiltros.addTab("ESMERILADO", crearPanelEsmerilado());
-		tabsFiltros.addTab("CONVOLUCIONES", crearPanelConvoluciones());
-
-		tabsFiltros.addChangeListener(e -> {
-			// 1. Obtener el nombre de la pestaña y normalizarlo
-			filtroActual = tabsFiltros.getTitleAt(tabsFiltros.getSelectedIndex()).toUpperCase();
-
-			// 2. Configurar el Slider según el filtro
-
-			switch (filtroActual) {
-
-			case "GRISES":
-				configurarSlider(2, 255, 128, 32);
-				break;
-			case "REDUCIR BITS":
-				configurarSlider(1, 8, 8, 1);
-				break;
-			case "RETRO":
-				configurarSlider(1, 10, 5, 1);
-				break;
-			case "CONVOLUCIONES":
-			    configurarSlider(1, 15, 1, 1);
-			    resetSlider();
-			    break;
-			}
-
-			// 3. Forzar al slider a redibujar sus etiquetas y actualizar la pantalla LCD
-			sliderNiveles.setLabelTable(sliderNiveles.createStandardLabels(sliderNiveles.getMajorTickSpacing()));
-			actualizarPantalla();
-		});
-		getContentPane().add(tabsFiltros, BorderLayout.SOUTH);
-
-		// --- VISOR DE IMAGEN (CENTRO) ---
-		visorInteligente = new VisorImagenInteligente();
-		getContentPane().add(visorInteligente, BorderLayout.CENTER);
+		add(left, BorderLayout.WEST);
 	}
 
-	// cambios en el Slider
-	private void configurarSlider(int min, int max, int value, int tick) {
-		sliderNiveles.setMinimum(min);
-		sliderNiveles.setMaximum(max);
-		sliderNiveles.setValue(value);
-		sliderNiveles.setMajorTickSpacing(tick);
-	}
-	private void resetSlider() {
-	    sliderNiveles.setValue(sliderNiveles.getMinimum());
+	private void initCenterPanel() {
+		visor = new VisorImagenPanel();
+		add(visor, BorderLayout.CENTER);
 	}
 
-	// --- MÉTODOS DE PANELES ---
+	private void initBottomTabs() {
+		JTabbedPane tabs = new JTabbedPane();
 
-	private JPanel crearPanelConvoluciones() {
-	    JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-	    panel.setBackground(new Color(30, 30, 30));
+		// Instanciar paneles (Asegúrate de que estas clases existan en tu package
+		// panel)
+		PanelRetro retro = new PanelRetro(imagenService, visor);
+		PanelBits bits = new PanelBits(imagenService, visor);
+		PanelConvoluciones conv = new PanelConvoluciones(imagenService, visor);
+		PanelSimple bn = new PanelSimple(imagenService, visor, "BN");
+		PanelSimple neg = new PanelSimple(imagenService, visor, "NEG");
+		PanelSimple esm = new PanelSimple(imagenService, visor, "ESM");
+		PanelGrises grises = new PanelGrises(imagenService, visor);
+		PanelDegradados deg = new PanelDegradados(imagenService, visor);
+		PanelHSV hsv = new PanelHSV(imagenService, visor);
+		PanelColor color = new PanelColor(imagenService, visor);
+		// Registrar en el Mapa (Las llaves deben coincidir con crearBotonFiltroRapido)
+		filtros.put("RETRO", retro);
+		filtros.put("REDUCIR BITS", bits);
+		filtros.put("CONVOLUCIONES", conv);
+		filtros.put("B/N", bn);
+		filtros.put("NEGATIVO", neg);
+		filtros.put("ESMERILADO", esm);
+		filtros.put("GRISES", grises);
+		filtros.put("DEGRADADOS", deg);
+		filtros.put("HSV", hsv);
+		filtros.put("Color", color);
+		// Añadir a las pestañas inferiores
+		tabs.addTab("Retro", retro);
+		tabs.addTab("Reducir Bits", bits);
+		tabs.addTab("Convoluciones", conv);
+		tabs.add("Degradados", deg);
+		tabs.add("HSV", hsv);
+		tabs.add("Color", color);
+		// Los filtros rápidos ya están en el panel izquierdo, pero se pueden dejar aquí
+		// también
 
-	    ButtonGroup grupo = new ButtonGroup();
-
-	    panel.add(crearRadioKernel("ENFOQUE", Kernels.kEnfoque, grupo));
-	    panel.add(crearRadioKernel("DESENFOQUE", Kernels.kDesenfoque, grupo));
-	    panel.add(crearRadioKernel("BORDES", Kernels.kBordes8, grupo));
-	    panel.add(crearRadioKernel("ACLARAR", Kernels.kAclaracion, grupo));
-	    panel.add(crearRadioKernel("OSCURECER", Kernels.kOscurecer, grupo));
-	    panel.add(crearRadioKernel("BLUR 9x9", Kernels.kDesenfoque9, grupo));
-	    panel.add(crearRadioKernel("NORMAL VAR", null, grupo));
-
-	    return panel;
+		tabs.addChangeListener(e -> cambiarFiltro(tabs));
+		add(tabs, BorderLayout.SOUTH);
 	}
 
-	// Método auxiliar para crear botones de kernel
-	private JRadioButton crearRadioKernel(String nombre, float[] matriz, ButtonGroup grupo) {
-	    JRadioButton rb = new JRadioButton(nombre);
-	    rb.setForeground(Color.WHITE);
-	    rb.setBackground(new Color(30, 30, 30));
-	    rb.setFocusPainted(false);
+	// ===================== LÓGICA DE INTERFAZ =====================
 
-	    grupo.add(rb);
+	private void actualizarPantallaLCD() {
+		if (filtroActivo == null)
+			return;
 
-	    rb.addActionListener(e -> {
-	        if (rb.isSelected()) {
-	            this.nombreKernelActual = nombre;
-	            
-	            if (nombre.equals("NORMAL VAR")) {
-	            	this.kernelActual = Kernels.kNormal;
-	            } else {
-	                resetSlider();
-	                this.kernelActual = matriz;
-	                BufferedImage res = imagenService.aplicarEfectoConvolucion(matriz, sliderNiveles.getValue());
-	                visorInteligente.setImagen(res);
-	            }
-	            
-	            actualizarPantalla();
-	        }
-	    });
+		// Obtenemos el nombre del filtro (ej: "REDUCCIÓN DE BITS")
+		String nombre = filtroActivo.getNombreFiltro();
 
-	    return rb;
+		// Ahora solo mandamos el nombre al LCD, sin el valor del slider
+		lblDigital.setText(" " + nombre.toUpperCase() + " ");
 	}
 
-	private JPanel crearPanelDegradados() {
-		// Mantenemos el FlowLayout horizontal alineado a la izquierda
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 15));
-		panel.setBackground(new Color(30, 30, 30));
-		panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-
-		JLabel titulo = new JLabel("DEGRADADOS:");
-		titulo.setFont(new Font("SansSerif", Font.BOLD, 11));
-		titulo.setForeground(new Color(150, 150, 150));
-		panel.add(titulo);
-
-		// Botones de acción inmediata
-		panel.add(crearBotonAccion("Izquierda → Derecha", e -> ejecutarDegradado("IZQ_DER")));
-		panel.add(crearBotonAccion("Derecha → Izquierda", e -> ejecutarDegradado("DER_IZQ")));
-		panel.add(crearBotonAccion("Arriba → Abajo", e -> ejecutarDegradado("ARRIBA_ABAJO")));
-		panel.add(crearBotonAccion("Abajo → Arriba", e -> ejecutarDegradado("ABAJO_ARRIBA")));
-		panel.add(crearBotonAccion("Radial", e -> ejecutarDegradado("RADIAL")));
-		panel.add(crearBotonAccion("Radial Inverso", e -> ejecutarDegradado("RADIAL_INVERSO")));
-
-		return panel;
-	}
-
-	// Método auxiliar para crear botones estilizados rápidamente
-	private JButton crearBotonAccion(String texto, java.awt.event.ActionListener accion) {
+	private JButton crearBotonFiltroRapido(String texto, String filtroKey) {
 		JButton btn = new JButton(texto);
-		btn.setBackground(new Color(55, 55, 55));
-		btn.setForeground(Color.WHITE);
-		btn.setFocusPainted(false);
 		btn.setFont(new Font("SansSerif", Font.BOLD, 10));
-		btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		btn.addActionListener(accion);
+		btn.setBackground(new Color(55, 55, 55));
+		btn.setForeground(Color.LIGHT_GRAY);
+		btn.setFocusPainted(false);
 
-		// Borde sutil para que parezca un botón moderno
-		btn.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(80, 80, 80), 1),
-				BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-
+		btn.addActionListener(e -> {
+			filtroActivo = filtros.get(filtroKey);
+			if (filtroActivo != null) {
+				filtroActivo.configurarSlider(sliderNiveles, lblIntensidad);
+				aplicarFiltro();
+			}
+		});
 		return btn;
 	}
 
-	private void ejecutarDegradado(String tipo) {
-		if (imagenService.getImagenOriginal() == null)
-			return;
-
-		// GUARDAMOS el tipo seleccionado para que el botón rojo lo sepa después
-		this.ultimoDegradado = tipo;
-
-		BufferedImage resultado = null;
-		switch (tipo) {
-		case "IZQ_DER":
-			resultado = imagenService.aplicarDegradadoIzqDer();
-			break;
-		case "DER_IZQ":
-			resultado = imagenService.aplicarDegradadoDerIzq();
-			break;
-		case "ARRIBA_ABAJO":
-			resultado = imagenService.aplicarDegradadoArriAbajo();
-			break;
-		case "ABAJO_ARRIBA":
-			resultado = imagenService.aplicarDegradadoAbajoArriba();
-			break;
-		case "RADIAL":
-			resultado = imagenService.aplicarDegradadoRadial();
-			break;
-		case "RADIAL_INVERSO":
-			resultado = imagenService.aplicarDegradadoRadialInverso();
-			break;
-		case "CONVOLUCIONES":
-			int iters = sliderNiveles.getValue();
-			resultado = imagenService.aplicarEfectoConvolucion(kernelActual, iters);
-			lblDigital.setText(nombreKernelActual + " x" + iters);
-			break;
-		}
-
-		if (resultado != null) {
-			visorInteligente.setImagen(resultado);
-			lblDigital.setText(" DEGRADADO: " + tipo);
+	private void cambiarFiltro(JTabbedPane tabs) {
+		String nombreTab = tabs.getTitleAt(tabs.getSelectedIndex()).toUpperCase();
+		filtroActivo = filtros.get(nombreTab);
+		if (filtroActivo != null) {
+			filtroActivo.configurarSlider(sliderNiveles, lblIntensidad);
+			actualizarPantallaLCD();
 		}
 	}
 
-	private JPanel crearPanelHSV() {
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 25, 15));
-		panel.setBackground(new Color(30, 30, 30));
-		panel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-
-		Font fuenteLabel = new Font("SansSerif", Font.BOLD, 11);
-		Color colorTexto = new Color(200, 200, 200);
-
-		// Inicializamos las variables globales usando tu método auxiliar
-		// Nota: Debes modificar crearItemCompacto para que devuelva el Spinner o
-		// asignarlo dentro
-		spinSaturacion = new JSpinner(new SpinnerNumberModel(100, 0, 200, 5));
-		spinBrillo = new JSpinner(new SpinnerNumberModel(100, 0, 200, 5));
-		spinOpacidad = new JSpinner(new SpinnerNumberModel(255, 0, 255, 5));
-
-		panel.add(crearEstructuraItem("SATURACIÓN", spinSaturacion, fuenteLabel, colorTexto));
-		panel.add(crearEstructuraItem("BRILLO", spinBrillo, fuenteLabel, colorTexto));
-		panel.add(crearEstructuraItem("OPACIDAD", spinOpacidad, fuenteLabel, colorTexto));
-
-		JButton btnAplicar = new JButton("Aplicar");
-		btnAplicar.setBackground(new Color(60, 60, 60));
-		btnAplicar.setForeground(Color.WHITE);
-
-		// ACCIÓN DEL BOTÓN
-		btnAplicar.addActionListener(e -> {
-			if (imagenService.getImagenOriginal() == null)
-				return;
-
-			// Convertimos los valores de 0-100 a escala 0.0-1.0 (o más para saturar)
-			float fSatu = ((Integer) spinSaturacion.getValue()) / 100f;
-			float fBri = ((Integer) spinBrillo.getValue()) / 100f;
-			float fTran = ((Integer) spinOpacidad.getValue()) / 255f;
-
-			BufferedImage res = imagenService.aplicarHSV(fTran, fSatu, fBri);
-			visorInteligente.setImagen(res);
-			lblDigital.setText(" HSV: S=" + spinSaturacion.getValue() + "% B=" + spinBrillo.getValue() + "%");
-		});
-
-		panel.add(btnAplicar);
-		return panel;
-	}
-
-	// Método auxiliar ajustado para recibir el spinner ya creado
-	private JPanel crearEstructuraItem(String titulo, JSpinner spinner, Font f, Color c) {
-		JPanel item = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-		item.setOpaque(false);
-		JLabel label = new JLabel(titulo);
-		label.setFont(f);
-		label.setForeground(c);
-		spinner.setPreferredSize(new Dimension(55, 24));
-		item.add(label);
-		item.add(spinner);
-		return item;
-	}
-
-	private JPanel crearPanelColor() {
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-		panel.setBackground(new Color(30, 30, 30));
-
-		// Tu arreglo de colores actual
-		Color[] colores = { new Color(255, 140, 0), new Color(34, 139, 34), new Color(0, 120, 215),
-				new Color(128, 0, 128), new Color(220, 20, 60), new Color(105, 105, 105), new Color(255, 20, 147),
-				new Color(0, 255, 255), new Color(255, 215, 0), new Color(75, 0, 130), new Color(0, 255, 127),
-				new Color(255, 99, 71), new Color(173, 216, 230), new Color(240, 230, 140), new Color(47, 79, 79),
-				new Color(139, 69, 19), new Color(57, 255, 20), new Color(255, 0, 255), new Color(0, 191, 255),
-				new Color(160, 82, 45), new Color(173, 216, 230) };
-
-		// Usamos un for indexado para acceder al nombre correspondiente
-		for (int i = 0; i < colores.length; i++) {
-			// Necesitamos variables finales para usarlas dentro del lambda (ActionListener)
-			final Color colorActual = colores[i];
-			final String nombreActual = NOMBRES_COLORES[i];
-
-			JButton btnColor = new JButton();
-			btnColor.setPreferredSize(new Dimension(40, 40));
-			btnColor.setBackground(colorActual);
-			btnColor.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-			btnColor.addActionListener(e -> {
-				// Guardamos la selección para el botón "APLICAR"
-				this.ultimoColorSeleccionado = colorActual;
-				this.ultimoNombreColor = nombreActual; // Asegúrate de declarar este String como atributo
-
-				// Aplicación inmediata
-				BufferedImage res = imagenService.aplicarTinte(colorActual);
-				visorInteligente.setImagen(res);
-
-				// CAMBIO CLAVE: Aquí mostramos el nombre en lugar del Hexadecimal
-				lblDigital.setText(" MODO COLOR: " + nombreActual);
-			});
-
-			panel.add(btnColor);
-		}
-
-		return panel;
-	}
-
-	private JPanel crearPanelBN() {
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
-		panel.setBackground(new Color(30, 30, 30));
-		panel.add(new JLabel("Modo Blanco/Negro"));
-		return panel;
-	}
-
-	private JPanel crearPanelNegativo() {
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
-		panel.setBackground(new Color(30, 30, 30));
-		panel.add(new JLabel("Modo Negativo"));
-		return panel;
-	}
-
-	private JPanel crearPanelEsmerilado() {
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
-		panel.setBackground(new Color(30, 30, 30));
-		panel.add(new JLabel("Modo Esmerilado"));
-		return panel;
-	}
-
-	private JPanel crearPanelEscalaGris() {
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
-		panel.setBackground(new Color(30, 30, 30));
-		panel.add(new JLabel("Modo Escala de Grises"));
-		return panel;
-	}
-
-	private JPanel crearPanelEscalaReducirBits() {
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
-		panel.setBackground(new Color(30, 30, 30));
-		panel.add(new JLabel("Modo Reducir Bits"));
-		return panel;
-	}
-
-	private JPanel crearPanelRetro() {
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
-		panel.setBackground(new Color(30, 30, 30));
-
-		JCheckBox cbR = new JCheckBox("R", true);
-		JCheckBox cbG = new JCheckBox("G", true);
-		JCheckBox cbB = new JCheckBox("B", true);
-
-		JCheckBox[] checks = { cbR, cbG, cbB };
-
-		for (JCheckBox cb : checks) {
-			cb.setForeground(Color.WHITE);
-			cb.setBackground(panel.getBackground());
-			cb.setFocusPainted(false);
-
-			cb.addActionListener(e -> actualizarCanales(cbR, cbG, cbB));
-			panel.add(cb);
-		}
-
-		// inicial (RGB)
-		actualizarCanales(cbR, cbG, cbB);
-
-		return panel;
-	}
-
-	private void actualizarCanales(JCheckBox r, JCheckBox g, JCheckBox b) {
-		StringBuilder sb = new StringBuilder();
-
-		if (r.isSelected())
-			sb.append("R");
-		if (g.isSelected())
-			sb.append("G");
-		if (b.isSelected())
-			sb.append("B");
-
-		canalActual = sb.toString();
-	}
-
-	// --- ACCIONES ---
-
-	private void accionAbrir() {
-		JFileChooser chooser = new JFileChooser();
-		if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-			try {
-				BufferedImage img = ImageIO.read(chooser.getSelectedFile());
-				imagenService.cargarImagen(img);
-				visorInteligente.setImagen(img);
-				lblDigital.setText(" IMAGEN LISTA ");
-			} catch (Exception e) {
-				JOptionPane.showMessageDialog(this, "Error al abrir imagen.");
-			}
-		}
-	}
-
-	private void accionGuardar() {
-		if (imagenService.getImagenActual() == null) {
-			JOptionPane.showMessageDialog(this, "No hay imagen.");
-			return;
-		}
-		JFileChooser fileChooser = new JFileChooser();
-		if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-			try {
-				imagenService.guardarImagen(fileChooser.getSelectedFile(), "png");
-				lblDigital.setText(" GUARDADO ");
-			} catch (Exception e) {
-				JOptionPane.showMessageDialog(this, "Error al guardar.");
-			}
-		}
-	}
-
-	private void accionReset() {
-		imagenService.restablecer();
-		if (imagenService.getImagenOriginal() != null) {
-			visorInteligente.setImagen(imagenService.getImagenOriginal());
-			actualizarPantalla();
-		}
-	}
-
-	private void accionEjecutarFiltro() {
+	private void aplicarFiltro() {
 		if (imagenService.getImagenOriginal() == null) {
 			lblDigital.setText(" CARGUE UNA IMAGEN ");
 			return;
 		}
-
-		BufferedImage resultado = null;
-
-		// Usamos switch para evaluar la pestaña activa
-		switch (filtroActual) {
-
-		case "RETRO":
-			resultado = imagenService.aplicarRetro(sliderNiveles.getValue(), canalActual);
-			break;
-
-		case "DEGRADADOS":
-			ejecutarDegradado(ultimoDegradado);
-			return;
-
-		case "COLOR":
-			resultado = imagenService.aplicarTinte(ultimoColorSeleccionado);
-			lblDigital.setText(" MODO COLOR: " + ultimoNombreColor + " APLICADO");
-			break;
-		case "HSV":
-			// Extraemos los valores de los Spinners globales
-			float fSatu = ((Integer) spinSaturacion.getValue()) / 100f;
-			float fBri = ((Integer) spinBrillo.getValue()) / 100f;
-			float fTran = ((Integer) spinOpacidad.getValue()) / 255f;
-
-			resultado = imagenService.aplicarHSV(fTran, fSatu, fBri);
-			break;
-
-		case "B/N":
-			resultado = imagenService.aplicarBlancoNegro();
-			lblDigital.setText(" MODO B/N  ");
-			break;
-
-		case "NEGATIVO":
-			resultado = imagenService.aplicarNegativo();
-			break;
-
-		case "REDUCIR BITS":
-			int cantidadBits = sliderNiveles.getValue();
-
-			resultado = imagenService.reducirBit(cantidadBits);
-			lblDigital.setText(" CALIDAD: " + cantidadBits + " BITS");
-			break;
-
-		case "GRISES":
-			int niveles = sliderNiveles.getValue();
-			resultado = imagenService.aplicarEscalaGrises(niveles);
-			lblDigital.setText("GRISES: " + niveles + " NIVELES");
-			break;
-
-		case "ESMERILADO":
-			resultado = imagenService.aplicarVidrioEsmerilado();
-			lblDigital.setText("MODO: VIDRIO ESMERILADO");
-			break;
-		case "CONVOLUCIONES":
-			int iteraciones = sliderNiveles.getValue();
-			resultado = imagenService.aplicarEfectoConvolucion(kernelActual, iteraciones);
-			lblDigital.setText("KERNEL: " + nombreKernelActual + " x" + iteraciones);
-			break;
-
-		default:
-			lblDigital.setText(" SELECCIONE UN FILTRO ");
-			break;
-		}
-
-		// Actualización centralizada del visor
-		if (resultado != null) {
-			visorInteligente.setImagen(resultado);
-			lblDigital.setText(" " + filtroActual + " ");
+		if (filtroActivo != null) {
+			filtroActivo.aplicarFiltro(sliderNiveles.getValue());
+			actualizarPantallaLCD();
 		}
 	}
 
-	private void actualizarPantalla() {
-	    if (lblIntensidad == null) return;
+	// ===================== MÉTODOS DE ARCHIVO =====================
 
-	    if (filtroActual.equals("GRISES") ||
-	        filtroActual.equals("REDUCIR BITS") ||
-	        filtroActual.equals("RETRO") ||
-	        filtroActual.equals("CONVOLUCIONES")) {
-
-	        int valor = sliderNiveles.getValue();
-
-	        if (filtroActual.equals("CONVOLUCIONES")) {
-	            lblIntensidad.setText("Iteraciones:"); 
-	            lblDigital.setText(String.format(" %s - ITERACIONES: %d ", filtroActual, valor));
-	        } else if (filtroActual.equals("REDUCIR BITS")) {
-	            lblIntensidad.setText("Bits:"); // 
-	            lblDigital.setText(String.format(" %s - BITS: %d ", filtroActual, valor));
-	        } else {
-	            lblIntensidad.setText("Intensidad:");
-	            lblDigital.setText(String.format(" %s - NIVEL: %d ", filtroActual, valor));
-	        }
-	     // Dentro de actualizarPantalla()
-	        if (filtroActual.equals("CONVOLUCIONES") && "NORMAL VAR".equals(nombreKernelActual)) {
-	            lblIntensidad.setText("Centro:");
-	            float valorCentro = valor / 10.0f; 
-	            
-	            BufferedImage res = imagenService.aplicarKernelPersonalizado(valorCentro);
-	            
-	            visorInteligente.setImagen(res);
-	            lblDigital.setText(String.format(" CENTRO KERNEL: %.1f ", valorCentro));
-	        }
-
-	    } else {
-	        // Para filtros que no usan el slider (como Negativo o B/N)
-	        lblIntensidad.setText("Intensidad:"); 
-	        lblDigital.setText(" " + filtroActual + " ");
-	    }
-	}
-
-	private Font cargarFuenteDigital() {
-		try {
-			InputStream is = getClass().getResourceAsStream("/digital-7.ttf");
-			return Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(22f);
-		} catch (Exception e) {
-			return new Font("Monospaced", Font.BOLD, 20);
-		}
-	}
-
-	private JButton crearBotonCircular(String ruta, String tip) {
-		JButton btn = new JButton();
-		btn.setToolTipText(tip);
-		try {
-			URL url = getClass().getResource(ruta);
-			if (url != null) {
-				Image img = new ImageIcon(url).getImage().getScaledInstance(25, 25, Image.SCALE_SMOOTH);
-				btn.setIcon(new ImageIcon(img));
+	private void abrir() {
+		JFileChooser ch = new JFileChooser();
+		if (ch.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+			try {
+				BufferedImage img = ImageIO.read(ch.getSelectedFile());
+				imagenService.cargarImagen(img);
+				visor.setImagen(img);
+				lblDigital.setText(" IMAGEN CARGADA ");
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(this, "Error al abrir imagen");
 			}
-		} catch (Exception e) {
-		}
-		btn.setPreferredSize(new Dimension(50, 50));
-		btn.setBackground(new Color(60, 60, 60));
-		btn.putClientProperty(FlatClientProperties.STYLE, "arc: 999");
-		return btn;
-	}
-}
-
-// Clase VisorImagenInteligente integrada o en el mismo archivo
-class VisorImagenInteligente extends JPanel {
-	private BufferedImage imagenOriginal;
-	private BufferedImage imagenMarco;
-
-	public VisorImagenInteligente() {
-		setBackground(Color.BLACK);
-		cargarMarco();
-	}
-
-	private void cargarMarco() {
-		try {
-			InputStream is = getClass().getResourceAsStream("/marco_visor.png");
-			if (is != null)
-				imagenMarco = ImageIO.read(is);
-		} catch (IOException e) {
 		}
 	}
 
-	public void setImagen(BufferedImage img) {
-		this.imagenOriginal = img;
-		repaint();
+	private void guardar() {
+		if (imagenService.getImagenActual() == null)
+			return;
+		JFileChooser ch = new JFileChooser();
+		if (ch.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+			try {
+				imagenService.guardarImagen(ch.getSelectedFile(), "png");
+				lblDigital.setText(" IMAGEN GUARDADA ");
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(this, "Error al guardar");
+			}
+		}
 	}
 
-	@Override
-	protected void paintComponent(Graphics g) {
-		super.paintComponent(g);
-		Graphics2D g2d = (Graphics2D) g;
-		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-
-		if (imagenOriginal != null) {
-			double scale = Math.min((double) getWidth() / imagenOriginal.getWidth(),
-					(double) getHeight() / imagenOriginal.getHeight());
-			int w = (int) (imagenOriginal.getWidth() * scale);
-			int h = (int) (imagenOriginal.getHeight() * scale);
-			g2d.drawImage(imagenOriginal, (getWidth() - w) / 2, (getHeight() - h) / 2, w, h, null);
-		}
-		if (imagenMarco != null) {
-			g2d.drawImage(imagenMarco, 0, 0, getWidth(), getHeight(), null);
+	private void reset() {
+		imagenService.restablecer();
+		if (imagenService.getImagenOriginal() != null) {
+			visor.setImagen(imagenService.getImagenOriginal());
+			lblDigital.setText(" SISTEMA RESETEADO ");
 		}
 	}
 }
