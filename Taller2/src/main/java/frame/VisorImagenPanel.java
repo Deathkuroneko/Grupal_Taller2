@@ -43,7 +43,7 @@ public class VisorImagenPanel extends JPanel {
 
         Graphics2D g2 = (Graphics2D) g.create();
 
-        // 🔥 Calidad PRO (mejor que solo bilinear)
+        
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);

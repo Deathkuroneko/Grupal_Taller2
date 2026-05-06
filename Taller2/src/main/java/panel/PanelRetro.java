@@ -32,8 +32,13 @@ public class PanelRetro extends JPanel {
         add(cbG);
         add(cbB);
 
-        // 🔥 Slider propio
+        // Slider propio
         slider = new JSlider(1, 10, 5);
+
+        slider.setPaintTicks(true);        // rayitas
+        slider.setPaintLabels(true);       // números visibles
+        slider.setMajorTickSpacing(1);     // separación de números
+
         add(slider);
 
         JButton btnAplicar = new JButton("APLICAR");

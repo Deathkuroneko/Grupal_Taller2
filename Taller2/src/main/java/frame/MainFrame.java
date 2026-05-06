@@ -123,7 +123,7 @@ public class MainFrame extends JFrame {
             try {
                 File archivo = ch.getSelectedFile();
 
-                // 🔥 SOLUCIÓN: agregar extensión si no tiene
+                // agregar extensión 
                 if (!archivo.getName().toLowerCase().endsWith(".png")) {
                     archivo = new File(archivo.getAbsolutePath() + ".png");
                 }
