@@ -35,7 +35,7 @@ public class PanelConvoluciones extends JPanel {
         add(crearRadio("OSCURECER", Kernels.kOscurecer, grupo));
         add(crearRadio("BLUR 9x9", Kernels.kDesenfoque9, grupo));
 
-        // 🔥 Slider propio
+        //Slider propio
         slider = new JSlider(1, 10, 1);
         slider.setMajorTickSpacing(1);
         slider.setPaintTicks(true);
@@ -65,7 +65,8 @@ public class PanelConvoluciones extends JPanel {
 
     private void aplicarFiltro() {
         if ("NORMAL VAR".equals(nombreKernelActual)) {
-            visor.setImagen(service.aplicarKernelPersonalizado(slider.getValue() / 10.0f));
+        	float valor = 1.0f + (slider.getValue() - 5) * 0.1f;
+            visor.setImagen(service.aplicarKernelPersonalizado(valor));
         } else {
             visor.setImagen(service.aplicarEfectoConvolucion(kernelActual, slider.getValue()));
         }

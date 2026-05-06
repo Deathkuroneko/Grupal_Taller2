@@ -15,8 +15,6 @@ public class ReducirBits {
 	    int desplazamiento = 8 - bitsDeseados;
 	    
 	    // 2. CREAMOS LA MÁSCARA DE RECORTE
-	    // Si bits=2, la máscara debe ser 11000000 en binario (0xC0)
-	    // Esto apaga los bits menos significativos antes de procesar
 	    int mascaraCorte = (0xFF << desplazamiento) & 0xFF;
 
 	    for (int y = 0; y < h; y++) {
@@ -28,14 +26,12 @@ public class ReducirBits {
 	            int g = (pixel >> 8) & 0xFF;
 	            int b = pixel & 0xFF;
 
-	            // Paso A: "Limpiamos" los bits que no queremos
+	            //bits que no queremos
 	            r = r & mascaraCorte;
 	            g = g & mascaraCorte;
 	            b = b & mascaraCorte;
 
-	            // Paso B: Normalización opcional
-	            // Para evitar que la imagen se oscurezca al apagar bits, 
-	            // llenamos los bits vacíos con una copia de los bits significativos
+	            //Normalización
 	            r = r | (r >> bitsDeseados);
 	            g = g | (g >> bitsDeseados);
 	            b = b | (b >> bitsDeseados);

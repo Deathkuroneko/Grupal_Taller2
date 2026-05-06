@@ -88,7 +88,7 @@ public class MainFrame extends JFrame {
         tabs.addTab("HSV", new PanelHSV(imagenService, visor));
         tabs.addTab("Color", new PanelColor(imagenService, visor));
 
-        // 🔥 Cambio de tab actualiza LCD
+        // Actualiza LCD
         tabs.addChangeListener(e -> {
             int i = tabs.getSelectedIndex();
             String nombre = tabs.getTitleAt(i);

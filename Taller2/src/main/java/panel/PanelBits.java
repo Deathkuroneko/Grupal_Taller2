@@ -21,7 +21,7 @@ public class PanelBits extends JPanel {
 
         add(new JLabel("BITS:"));
 
-        int[] niveles = {2, 4, 8, 16, 32};
+        int[] niveles = {1, 2, 3, 4, 5, 6, 7, 8};
 
         ButtonGroup grupo = new ButtonGroup();
 
