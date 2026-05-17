@@ -7,7 +7,7 @@ import java.awt.image.BufferedImage;
 
 public class Histograma {
 
-    public static BufferedImage generarHistograma(BufferedImage imagen) {
+    public static BufferedImage generarHistograma(BufferedImage imagen, boolean red, boolean green, boolean blue) {
 
         int anchoHisto = 800;
         int altoHisto = 600;
@@ -63,29 +63,38 @@ public class Histograma {
 
    
         // DIBUJAR HISTOGRAMAS
-        dibujarHistograma(
-                gr,
-                histoRed,
-                new Color(255, 0, 0, 180),
-                escalaX,
-                escalaY,
-                altoHisto);
+        if (red) {
 
-        dibujarHistograma(
-                gr,
-                histoGreen,
-                new Color(0, 255, 0, 180),
-                escalaX,
-                escalaY,
-                altoHisto);
+            dibujarHistograma(
+                    gr,
+                    histoRed,
+                    new Color(255, 0, 0, 180),
+                    escalaX,
+                    escalaY,
+                    altoHisto);
+        }
 
-        dibujarHistograma(
-                gr,
-                histoBlue,
-                new Color(0, 0, 255, 180),
-                escalaX,
-                escalaY,
-                altoHisto);
+        if (green) {
+
+            dibujarHistograma(
+                    gr,
+                    histoGreen,
+                    new Color(0, 255, 0, 180),
+                    escalaX,
+                    escalaY,
+                    altoHisto);
+        }
+
+        if (blue) {
+
+            dibujarHistograma(
+                    gr,
+                    histoBlue,
+                    new Color(0, 0, 255, 180),
+                    escalaX,
+                    escalaY,
+                    altoHisto);
+        }
 
         gr.dispose();
 

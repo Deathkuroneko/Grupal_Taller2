@@ -42,7 +42,7 @@ public class PanelSimple extends JPanel {
             case "BN"->visor.setImagen(service.aplicarBlancoNegro());
             case "NEG"->visor.setImagen(service.aplicarNegativo());
             case "ESM"->visor.setImagen(service.aplicarVidrioEsmerilado());
-            case "HISTO"->visor.setImagen(service.generarHistograma());
+            
         }
     }
 }

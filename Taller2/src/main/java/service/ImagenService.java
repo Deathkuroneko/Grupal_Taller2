@@ -186,9 +186,9 @@ public class ImagenService {
         return imagenActual;
     }
     // ===================== HISTOGRAMA =====================
-    public BufferedImage generarHistograma() {
+    public BufferedImage generarHistograma(boolean red, boolean green, boolean blue) {
         if (!hayImagen()) return null;
-        return filtros.Histograma.generarHistograma(imagenActual);
+        return filtros.Histograma.generarHistograma(imagenActual, red,  green,  blue);
     }
 
     // ===================== UTIL =====================

@@ -25,6 +25,7 @@ import panel.PanelConvoluciones;
 import panel.PanelDegradados;
 import panel.PanelGrises;
 import panel.PanelHSV;
+import panel.PanelHistograma;
 import panel.PanelMatrizColor;
 import panel.PanelRetro;
 import panel.PanelSimple;
@@ -107,7 +108,7 @@ public class MainFrame extends JFrame {
         tabs.addTab("HSV", new PanelHSV(imagenService, visor));
         tabs.addTab("Color", new PanelColor(imagenService, visor));
         tabs.addTab("Matriz Color", new PanelMatrizColor(imagenService, visor));
-        tabs.addTab("Histograma", new PanelSimple(imagenService, visor, "HISTO"));
+        tabs.addTab("Histograma", new PanelHistograma(imagenService, visor));
 
         // Actualiza LCD
         tabs.addChangeListener(e -> {
