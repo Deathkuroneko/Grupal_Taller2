@@ -1,10 +1,22 @@
 package service;
 
-import filtros.*;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
+
 import javax.imageio.ImageIO;
+
+import filtros.BlancoNegro;
+import filtros.Colores;
+import filtros.Convoluciones;
+import filtros.Degradados;
+import filtros.EscalaGrisesN;
+import filtros.HSV;
+import filtros.MatrizColores;
+import filtros.Negativo;
+import filtros.ReducirBits;
+import filtros.Retro;
+import filtros.VidrioEsmerilado;
 
 public class ImagenService {
 
@@ -165,6 +177,18 @@ public class ImagenService {
 
         imagenActual = Convoluciones.aplicarFiltro(imagenActual, kernel, 1);
         return imagenActual;
+    }
+    // ===================== MATRIZ COLOR =====================
+    public BufferedImage aplicarEfectoMatrizColor(float[][] matriz) {
+        if (!hayImagen()) return null;
+
+        imagenActual = MatrizColores.aplicarMatriz(imagenActual, matriz);
+        return imagenActual;
+    }
+    // ===================== HISTOGRAMA =====================
+    public BufferedImage generarHistograma() {
+        if (!hayImagen()) return null;
+        return filtros.Histograma.generarHistograma(imagenActual);
     }
 
     // ===================== UTIL =====================

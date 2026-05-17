@@ -1,22 +1,28 @@
 package panel;
 
+import java.awt.Color;
+import java.awt.FlowLayout;
+
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JSlider;
+
 import filtros.Kernels;
 import frame.VisorImagenPanel;
 import service.ImagenService;
-
-import javax.swing.*;
-import java.awt.*;
 
 
 @SuppressWarnings("serial")
 public class PanelConvoluciones extends JPanel {
 
-    private ImagenService service;
-    private VisorImagenPanel visor;
+    private final ImagenService service;
+    private final VisorImagenPanel visor;
 
     private float[] kernelActual = Kernels.kNormal;
     private String nombreKernelActual = "NORMAL";
-    private JSlider slider;
+    private final JSlider slider;
 
     public PanelConvoluciones(ImagenService service, VisorImagenPanel visor) {
         this.service = service;

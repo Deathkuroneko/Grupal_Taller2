@@ -1,15 +1,34 @@
 package frame;
 
-import panel.*;
-import service.ImagenService;
-
-import javax.swing.*;
-import javax.swing.border.LineBorder;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.border.LineBorder;
+
+import panel.PanelBits;
+import panel.PanelColor;
+import panel.PanelConvoluciones;
+import panel.PanelDegradados;
+import panel.PanelGrises;
+import panel.PanelHSV;
+import panel.PanelMatrizColor;
+import panel.PanelRetro;
+import panel.PanelSimple;
+import service.ImagenService;
 
 @SuppressWarnings("serial")
 public class MainFrame extends JFrame {
@@ -87,6 +106,8 @@ public class MainFrame extends JFrame {
         tabs.addTab("Degradados", new PanelDegradados(imagenService, visor));
         tabs.addTab("HSV", new PanelHSV(imagenService, visor));
         tabs.addTab("Color", new PanelColor(imagenService, visor));
+        tabs.addTab("Matriz Color", new PanelMatrizColor(imagenService, visor));
+        tabs.addTab("Histograma", new PanelSimple(imagenService, visor, "HISTO"));
 
         // Actualiza LCD
         tabs.addChangeListener(e -> {
@@ -108,7 +129,7 @@ public class MainFrame extends JFrame {
                 imagenService.cargarImagen(img);
                 visor.setImagen(img);
                 lblDigital.setText(" IMAGEN CARGADA ");
-            } catch (Exception e) {
+            } catch (IOException e) {
                 JOptionPane.showMessageDialog(this, "Error al abrir imagen");
             }
         }

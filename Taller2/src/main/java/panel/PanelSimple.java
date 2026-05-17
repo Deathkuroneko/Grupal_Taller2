@@ -1,17 +1,22 @@
 package panel;
 
-import service.ImagenService;
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
 import frame.VisorImagenPanel;
-import java.awt.*;
+import service.ImagenService;
 
 @SuppressWarnings("serial")
 public class PanelSimple extends JPanel {
 
-    private String tipo;
-    private ImagenService service;
-    private VisorImagenPanel visor;
+    private final String tipo;
+    private final ImagenService service;
+    private final VisorImagenPanel visor;
 
     public PanelSimple(ImagenService service, VisorImagenPanel visor, String tipo) {
         this.service = service;
@@ -34,15 +39,10 @@ public class PanelSimple extends JPanel {
 
     private void aplicarFiltro() {
         switch (tipo) {
-            case "BN":
-                visor.setImagen(service.aplicarBlancoNegro());
-                break;
-            case "NEG":
-                visor.setImagen(service.aplicarNegativo());
-                break;
-            case "ESM":
-                visor.setImagen(service.aplicarVidrioEsmerilado());
-                break;
+            case "BN"->visor.setImagen(service.aplicarBlancoNegro());
+            case "NEG"->visor.setImagen(service.aplicarNegativo());
+            case "ESM"->visor.setImagen(service.aplicarVidrioEsmerilado());
+            case "HISTO"->visor.setImagen(service.generarHistograma());
         }
     }
 }

@@ -1,15 +1,15 @@
 package main;
 
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
 import com.formdev.flatlaf.FlatDarkLaf;
 
 import frame.MainFrame;
 
-import javax.swing.UIManager;
-import javax.swing.SwingUtilities;
-
 
 public class App {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         try {
             // usa la implementación de FlatLaf
             UIManager.setLookAndFeel(new FlatDarkLaf());
@@ -18,7 +18,7 @@ public class App {
             UIManager.put("Button.arc", 15);
             UIManager.put("Component.arc", 15);
             
-        } catch (Exception ex) {
+        } catch (IllegalArgumentException ex) {
             System.err.println("Error al inicializar FlatLaf: " + ex.getMessage());
         }
 

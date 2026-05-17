@@ -1,18 +1,26 @@
 package panel;
 
-import service.ImagenService;
-import javax.swing.*;
-import frame.VisorImagenPanel;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.FlowLayout;
+import java.awt.Font;
 import java.util.Hashtable;
+
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+
+import frame.VisorImagenPanel;
+import service.ImagenService;
 
 @SuppressWarnings("serial")
 public class PanelGrises extends JPanel {
 
-    private ImagenService service;
-    private VisorImagenPanel visor;
-    private JSlider slider;
-    private JLabel lblValor;
+    private final ImagenService service;
+    private final VisorImagenPanel visor;
+    private final JSlider slider;
+
 
     public PanelGrises(ImagenService service, VisorImagenPanel visor) {
         this.service = service;

@@ -1,15 +1,20 @@
 package panel;
 
-import service.ImagenService;
-import javax.swing.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+
+import javax.swing.JButton;
+import javax.swing.JPanel;
+
 import frame.VisorImagenPanel;
-import java.awt.*;
+import service.ImagenService;
 
 @SuppressWarnings("serial")
 public class PanelColor extends JPanel {
 
-    private ImagenService service;
-    private VisorImagenPanel visor;
+    private final ImagenService service;
+    private final VisorImagenPanel visor;
 
     private Color colorSeleccionado = Color.ORANGE;
 
