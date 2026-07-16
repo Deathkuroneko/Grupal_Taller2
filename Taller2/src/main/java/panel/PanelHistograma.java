@@ -84,4 +84,5 @@ public class PanelHistograma extends JPanel {
 
         visor.setImagen(histograma);
     }
+    
 }

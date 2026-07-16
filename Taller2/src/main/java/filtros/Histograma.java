@@ -1,135 +1,120 @@
 package filtros;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class Histograma {
 
-    public static BufferedImage generarHistograma(BufferedImage imagen, boolean red, boolean green, boolean blue) {
+	public static BufferedImage generarHistograma(BufferedImage imagen, boolean red, boolean green, boolean blue) {
 
-        int anchoHisto = 800;
-        int altoHisto = 600;
+		int anchoHisto = 900;
+		int altoHisto = 600;
 
-        int[] histoRed = new int[256];
-        int[] histoGreen = new int[256];
-        int[] histoBlue = new int[256];
+		int[] histoRed = new int[256];
+		int[] histoGreen = new int[256];
+		int[] histoBlue = new int[256];
 
-        BufferedImage histogramaImg = new BufferedImage(
-                anchoHisto,
-                altoHisto,
-                BufferedImage.TYPE_INT_RGB);
+		BufferedImage histogramaImg = new BufferedImage(anchoHisto, altoHisto, BufferedImage.TYPE_INT_RGB);
 
-        Graphics2D gr = histogramaImg.createGraphics();
+		Graphics2D g = histogramaImg.createGraphics();
 
-    
-        gr.setColor(Color.BLACK);
-        gr.setStroke(new BasicStroke(2));
-        gr.fillRect(0, 0, anchoHisto, altoHisto);
+		// ANTIALIASING
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // CALCULAR HISTOGRAMAS
-        int ancho = imagen.getWidth();
-        int alto = imagen.getHeight();
+		// ================= FONDO =================
 
-        for (int y = 0; y < alto; y++) {
+		GradientPaint fondo = new GradientPaint(0, 0, new Color(30, 30, 35), 0, altoHisto, new Color(5, 5, 10));
 
-            for (int x = 0; x < ancho; x++) {
+		g.setPaint(fondo);
+		g.fillRect(0, 0, anchoHisto, altoHisto);
 
-                int pixel = imagen.getRGB(x, y);
+		// ================= CALCULAR =================
 
-                int r = (pixel >> 16) & 0xFF;
-                int g = (pixel >> 8) & 0xFF;
-                int b = pixel & 0xFF;
+		for (int y = 0; y < imagen.getHeight(); y++) {
 
-                histoRed[r]++;
-                histoGreen[g]++;
-                histoBlue[b]++;
-            }
-        }
+			for (int x = 0; x < imagen.getWidth(); x++) {
 
-        // MAXIMO GLOBAL
-        int maxR = maximo(histoRed);
-        int maxG = maximo(histoGreen);
-        int maxB = maximo(histoBlue);
+				int pixel = imagen.getRGB(x, y);
 
-        int maxGlobal = Math.max(maxR,
-                Math.max(maxG, maxB));
+				int r = (pixel >> 16) & 255;
+				int gr = (pixel >> 8) & 255;
+				int b = pixel & 255;
 
+				histoRed[r]++;
+				histoGreen[gr]++;
+				histoBlue[b]++;
+			}
+		}
 
-        // ESCALAS
-        float escalaX = anchoHisto / 256.0f;
-        float escalaY = altoHisto * (1.0f / maxGlobal);
+		int max = Math.max(maximo(histoRed), Math.max(maximo(histoGreen), maximo(histoBlue)));
 
-   
-        // DIBUJAR HISTOGRAMAS
-        if (red) {
+		// ================= TITULO =================
 
-            dibujarHistograma(
-                    gr,
-                    histoRed,
-                    new Color(255, 0, 0, 180),
-                    escalaX,
-                    escalaY,
-                    altoHisto);
-        }
+		g.setFont(new Font("Segoe UI", Font.BOLD, 22));
+		g.setColor(Color.WHITE);
 
-        if (green) {
+		g.drawString("Histograma RGB", 30, 40);
 
-            dibujarHistograma(
-                    gr,
-                    histoGreen,
-                    new Color(0, 255, 0, 180),
-                    escalaX,
-                    escalaY,
-                    altoHisto);
-        }
+		// ================= CUADRICULA =================
 
-        if (blue) {
+		g.setStroke(new BasicStroke(1));
 
-            dibujarHistograma(
-                    gr,
-                    histoBlue,
-                    new Color(0, 0, 255, 180),
-                    escalaX,
-                    escalaY,
-                    altoHisto);
-        }
+		g.setColor(new Color(255, 255, 255, 40));
 
-        gr.dispose();
+		for (int i = 0; i <= 10; i++) {
 
-        return histogramaImg;
-    }
+			int y = 80 + i * 45;
 
-    private static int maximo(int[] h) {
+			g.drawLine(60, y, 850, y);
+		}
 
-        int max = h[0];
-        for (int i = 1; i < h.length; i++) {
-            if (h[i] > max) {
-                max = h[i];
-            }
-        }
+		// ================= EJES =================
 
-        return max;
-    }
+		g.setColor(Color.WHITE);
 
-    private static void dibujarHistograma(
-            Graphics2D g,
-            int[] histo,
-            Color color,
-            float escalaX,
-            float escalaY,
-            int alto) {
+		g.drawLine(60, 530, 850, 530);
 
-        g.setColor(color);
-        g.setStroke(new BasicStroke(2));
+		g.drawLine(60, 80, 60, 530);
 
-        for (int i = 1; i < histo.length; i++) {
-            int x1 = (int) (escalaX * (i - 1));
-            int y1 = alto - (int) (escalaY * histo[i - 1]);
-            int x2 = (int) (escalaX * i);
-            int y2 = alto - (int) (escalaY * histo[i]);
-            g.drawLine(x1, y1, x2, y2);
-        }
-    }
+		float escalaX = 790f / 256f;
+		float escalaY = 430f / max;
+		// ================= DIBUJAR =================
+
+		if (red) {
+			dibujarBarras(g, histoRed, new Color(255, 70, 70, 180), escalaX, escalaY);
+		}
+
+		if (green) {
+			dibujarBarras(g, histoGreen, new Color(50, 255, 120, 180), escalaX, escalaY);
+		}
+
+		if (blue) {
+			dibujarBarras(g, histoBlue, new Color(70, 120, 255, 180), escalaX, escalaY);
+		}
+	
+		g.dispose();
+		return histogramaImg;
+
+	}
+
+	private static int maximo(int[] h) {
+		int max = 0;
+		for (int n : h) {
+			if (n > max)
+				max = n;
+		}
+		return max;
+	}
+
+	private static void dibujarBarras(Graphics2D g, int[] histo, Color color, float escalaX, float escalaY) {
+		g.setColor(color);
+		for (int i = 0; i < 256; i++) {
+			int altura = (int) (histo[i] * escalaY);
+			int x = 60 + (int) (i * escalaX);
+			int y = 530 - altura;
+			g.fillRoundRect(x, y, 3, altura, 3, 3);
+
+		}
+
+	}
 }

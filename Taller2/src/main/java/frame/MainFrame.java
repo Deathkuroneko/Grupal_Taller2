@@ -2,6 +2,7 @@ package frame;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.image.BufferedImage;
@@ -30,140 +31,152 @@ import panel.PanelMatrizColor;
 import panel.PanelRetro;
 import panel.PanelSimple;
 import service.ImagenService;
+import panel.PanelBlending;
+import panel.PanelBufferAcumulacion;
 
 @SuppressWarnings("serial")
 public class MainFrame extends JFrame {
 
-    private JLabel lblDigital;
+	private JLabel lblDigital;
 
-    private ImagenService imagenService = new ImagenService();
-    private VisorImagenPanel visor;
+	private ImagenService imagenService = new ImagenService();
 
-    public MainFrame() {
-        setTitle("Editor de Fotos - UCE PhotoSystem");
-        setSize(1200, 800);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
+	private VisorImagenPanel visor;
 
-        // Icono
-        try {
-            setIconImage(new ImageIcon(getClass().getResource("/icons/camara-de-fotos.png")).getImage());
-        } catch (Exception e) {
-            System.out.println("Icono no encontrado");
-        }
+	public MainFrame() {
+		setTitle("Editor de Fotos - UCE PhotoSystem");
+		setSize(1200, 800);
+		setLocationRelativeTo(null);
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
+		setLayout(new BorderLayout());
 
-        initTopPanel();
-        initCenterPanel();
-        initBottomTabs();
-    }
+		// Icono
+		try {
+			setIconImage(new ImageIcon(getClass().getResource("/icons/camara-de-fotos.png")).getImage());
+		} catch (Exception e) {
+			System.out.println("Icono no encontrado");
+		}
 
-    // ===================== TOP =====================
-    private void initTopPanel() {
-        JPanel top = new JPanel(new BorderLayout());
-        top.setBackground(new Color(20, 20, 20));
-        top.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+		initTopPanel();
+		initCenterPanel();
+		initBottomTabs();
+	}
 
-        JPanel lcd = new JPanel();
-        lcd.setBackground(Color.BLACK);
-        lcd.setBorder(new LineBorder(new Color(0, 50, 0), 2, true));
+	// ===================== TOP =====================
+	private void initTopPanel() {
+		JPanel top = new JPanel(new BorderLayout());
+		top.setBackground(new Color(20, 20, 20));
+		top.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
 
-        lblDigital = new JLabel(" ESPERANDO IMAGEN ");
-        lblDigital.setForeground(Color.GREEN);
-        lblDigital.setFont(new Font("DialogInput", Font.BOLD, 16));
+		JPanel lcd = new JPanel();
+		lcd.setBackground(Color.BLACK);
+		lcd.setBorder(new LineBorder(new Color(0, 50, 0), 2, true));
 
-        lcd.add(lblDigital);
+		lblDigital = new JLabel(" ESPERANDO IMAGEN ");
+		lblDigital.setForeground(Color.GREEN);
+		lblDigital.setFont(new Font("DialogInput", Font.BOLD, 16));
 
-        JPanel acciones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
-        acciones.setOpaque(false);
+		lcd.add(lblDigital);
 
-        acciones.add(new BotonCircular("/icons/abrir.png", "Abrir", e -> abrir()));
-        acciones.add(new BotonCircular("/icons/save.png", "Guardar", e -> guardar()));
-        acciones.add(new BotonCircular("/icons/reset.png", "Reset", e -> reset()));
+		JPanel acciones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
+		acciones.setOpaque(false);
 
-        top.add(lcd, BorderLayout.WEST);
-        top.add(acciones, BorderLayout.EAST);
+		acciones.add(new BotonCircular("/icons/abrir.png", "Abrir", e -> abrir()));
+		acciones.add(new BotonCircular("/icons/save.png", "Guardar", e -> guardar()));
+		acciones.add(new BotonCircular("/icons/reset.png", "Reset", e -> reset()));
 
-        add(top, BorderLayout.NORTH);
-    }
+		top.add(lcd, BorderLayout.WEST);
+		top.add(acciones, BorderLayout.EAST);
 
-    // ===================== CENTRO =====================
-    private void initCenterPanel() {
-        visor = new VisorImagenPanel();
-        add(visor, BorderLayout.CENTER);
-    }
+		add(top, BorderLayout.NORTH);
+	}
 
-    // ===================== TABS =====================
-    private void initBottomTabs() {
-        JTabbedPane tabs = new JTabbedPane();
+	// ===================== CENTRO =====================
+	  private void initCenterPanel() {
+	        visor = new VisorImagenPanel();
+	        add(visor, BorderLayout.CENTER);
+	    }
 
-        tabs.addTab("Retro", new PanelRetro(imagenService, visor));
-        tabs.addTab("Bits", new PanelBits(imagenService, visor));
-        tabs.addTab("Convoluciones", new PanelConvoluciones(imagenService, visor));
-        tabs.addTab("B/N", new PanelSimple(imagenService, visor, "BN"));
-        tabs.addTab("Negativo", new PanelSimple(imagenService, visor, "NEG"));
-        tabs.addTab("Esmerilado", new PanelSimple(imagenService, visor, "ESM"));
-        tabs.addTab("Grises", new PanelGrises(imagenService, visor));
-        tabs.addTab("Degradados", new PanelDegradados(imagenService, visor));
-        tabs.addTab("HSV", new PanelHSV(imagenService, visor));
-        tabs.addTab("Color", new PanelColor(imagenService, visor));
-        tabs.addTab("Matriz Color", new PanelMatrizColor(imagenService, visor));
-        tabs.addTab("Histograma", new PanelHistograma(imagenService, visor));
+	// ===================== TABS =====================
+	private void initBottomTabs() {
+		JTabbedPane tabs = new JTabbedPane();
 
-        // Actualiza LCD
-        tabs.addChangeListener(e -> {
-            int i = tabs.getSelectedIndex();
-            String nombre = tabs.getTitleAt(i);
-            lblDigital.setText(" " + nombre.toUpperCase() + " ");
-        });
+		tabs.addTab("Retro", new PanelRetro(imagenService, visor));
+		tabs.addTab("Bits", new PanelBits(imagenService, visor));
+		tabs.addTab("Convoluciones", new PanelConvoluciones(imagenService, visor));
+		tabs.addTab("B/N", new PanelSimple(imagenService, visor, "BN"));
+		tabs.addTab("Negativo", new PanelSimple(imagenService, visor, "NEG"));
+		tabs.addTab("Esmerilado", new PanelSimple(imagenService, visor, "ESM"));
+		tabs.addTab("Grises", new PanelGrises(imagenService, visor));
+		tabs.addTab("Degradados", new PanelDegradados(imagenService, visor));
+		tabs.addTab("HSV", new PanelHSV(imagenService, visor));
+		tabs.addTab("Color", new PanelColor(imagenService, visor));
+		tabs.addTab("Matriz Color", new PanelMatrizColor(imagenService, visor));
+		tabs.addTab("Histograma", new PanelHistograma(imagenService, visor));
+		tabs.addTab("Blending", new PanelBlending(imagenService, visor));
+		tabs.addTab("Operación con Fragmentos", new PanelBufferAcumulacion(  imagenService, visor));
 
-        add(tabs, BorderLayout.SOUTH);
-    }
+		// Actualiza LCD
+		tabs.addChangeListener(e -> {
+			int i = tabs.getSelectedIndex();
+			String nombre = tabs.getTitleAt(i);
+			lblDigital.setText(" " + nombre.toUpperCase() + " ");
+			if(!nombre.equals("Blending")) {
+				visor.limpiarBlending();
+			}
+		});
 
-    // ===================== ARCHIVOS =====================
+		add(tabs, BorderLayout.SOUTH);
+	}
 
-    private void abrir() {
-        JFileChooser ch = new JFileChooser();
-        if (ch.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try {
-                BufferedImage img = ImageIO.read(ch.getSelectedFile());
-                imagenService.cargarImagen(img);
-                visor.setImagen(img);
-                lblDigital.setText(" IMAGEN CARGADA ");
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, "Error al abrir imagen");
-            }
-        }
-    }
+	// ===================== ARCHIVOS =====================
 
-    private void guardar() {
-        if (imagenService.getImagenActual() == null) return;
+	private void abrir() {
+		JFileChooser ch = new JFileChooser();
+		if (ch.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+			try {
+				BufferedImage img = ImageIO.read(ch.getSelectedFile());
+				imagenService.cargarImagen(img);
+				visor.setImagen(imagenService.getImagenActual());
+				visor.setMiniatura(imagenService.getImagenOriginal());
+				lblDigital.setText(" IMAGEN CARGADA ");
+			} catch (IOException e) {
+				JOptionPane.showMessageDialog(this, "Error al abrir imagen");
+			}
+		}
+	}
 
-        JFileChooser ch = new JFileChooser();
+	private void guardar() {
+		if (imagenService.getImagenActual() == null)
+			return;
 
-        if (ch.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try {
-                File archivo = ch.getSelectedFile();
+		JFileChooser ch = new JFileChooser();
 
-                // agregar extensión 
-                if (!archivo.getName().toLowerCase().endsWith(".png")) {
-                    archivo = new File(archivo.getAbsolutePath() + ".png");
-                }
+		if (ch.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+			try {
+				File archivo = ch.getSelectedFile();
 
-                imagenService.guardarImagen(archivo, "png");
-                lblDigital.setText(" IMAGEN GUARDADA ");
+				// agregar extensión
+				if (!archivo.getName().toLowerCase().endsWith(".png")) {
+					archivo = new File(archivo.getAbsolutePath() + ".png");
+				}
 
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Error al guardar");
-            }
-        }
-    }
+				imagenService.guardarImagen(archivo, "png");
+				lblDigital.setText(" IMAGEN GUARDADA ");
 
-    private void reset() {
-        imagenService.restablecer();
-        if (imagenService.getImagenOriginal() != null) {
-            visor.setImagen(imagenService.getImagenOriginal());
-            lblDigital.setText(" SISTEMA RESETEADO ");
-        }
-    }
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(this, "Error al guardar");
+			}
+		}
+	}
+
+	private void reset() {
+		imagenService.restablecer();
+		if (imagenService.getImagenOriginal() != null) {
+			visor.setImagen(imagenService.getImagenActual());
+			visor.setImagen(imagenService.getImagenOriginal());
+			lblDigital.setText(" SISTEMA RESETEADO ");
+		}
+
+	}
 }
