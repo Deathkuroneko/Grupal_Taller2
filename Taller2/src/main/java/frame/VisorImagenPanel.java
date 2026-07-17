@@ -13,10 +13,12 @@ public class VisorImagenPanel extends JPanel {
     private BufferedImage marco;
     private BufferedImage miniatura;
     private BufferedImage blending;
-
+    private BufferedImage imgHistograma;
+    
+    
     public VisorImagenPanel() {
         setBackground(Color.BLACK);
-        setDoubleBuffered(true); // mejora renderizado
+        setDoubleBuffered(true); 
         cargarMarco();
     }
 
@@ -24,6 +26,10 @@ public class VisorImagenPanel extends JPanel {
         miniatura = img;
         repaint();
 
+    }
+    public void setHistograma(BufferedImage img) {
+        this.imgHistograma = img;
+        repaint(); 
     }
     public void setBlending(BufferedImage img){
         blending = img;
@@ -87,29 +93,33 @@ public class VisorImagenPanel extends JPanel {
         g2.drawRect(x, y, ancho, alto);
 
      // IZQUIERDA
+        if(blending != null || imgHistograma != null){
+            int bx = 10;
+            int by = getHeight() - 130;
+            int bw = 140;
+            int bh = 110;
 
-     if(blending != null){
-         int bx = 10;
-         int by = getHeight() - 130;
+            // Fondo
+            g2.setColor(new Color(30, 30, 30));
+            g2.fillRect(bx, by, bw, bh);
+            
+            // Borde
+            g2.setColor(Color.CYAN);
+            g2.drawRect(bx, by, bw, bh);
 
-         int bw = 140;
-         int bh = 110;
-         // fondo
-         g2.setColor(new Color(30,30,30));
+            // Dibujar Histograma si existe
+            if (imgHistograma != null) {
+                g2.drawImage(imgHistograma, bx, by, bw, bh, null);
+            } 
+            // Si quieres que el blending también se vea, podrías ponerlo pequeño 
+            // o simplemente mostrar el histograma en ese espacio
+            else if (blending != null) {
+                g2.drawImage(blending, bx, by, bw, bh, null);
+            }
 
-         g2.fillRect( bx, by, bw, bh);
-         // borde
-         g2.setColor(Color.CYAN);
-
-         g2.drawRect( bx, by, bw,bh);
-         // imagen secundaria
-         g2.drawImage(blending, bx, by, bw, bh, null);
-
-         g2.setColor(Color.WHITE);
-
-         g2.drawString(   "BLENDING", bx+35,by-5);
-
-     }
+            g2.setColor(Color.WHITE);
+            g2.drawString("HISTOGRAMA", bx + 30, by - 5);
+        }
         // Si existe una imagen, dibujarla encima
         if (miniatura != null) {
             g2.drawImage(miniatura, x, y, ancho, alto, null);
@@ -133,5 +143,9 @@ public class VisorImagenPanel extends JPanel {
         int y = (panelH - h) / 2;
 
         g2.drawImage(imagen, x, y, w, h, null);
+    }
+
+    public BufferedImage getImagenActual() {
+        return imagen;
     }
 }

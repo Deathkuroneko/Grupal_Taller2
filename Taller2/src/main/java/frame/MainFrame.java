@@ -24,15 +24,21 @@ import panel.PanelBits;
 import panel.PanelColor;
 import panel.PanelConvoluciones;
 import panel.PanelDegradados;
+import panel.PanelEcualizador;
+import panel.PanelFiltroSeparable;
 import panel.PanelGrises;
 import panel.PanelHSV;
 import panel.PanelHistograma;
 import panel.PanelMatrizColor;
+import panel.PanelOperacionesFragmentos;
+import panel.PanelOperacionesPixel;
+import panel.PanelRasterizador;
+import panel.PanelRenderizado3D;
 import panel.PanelRetro;
 import panel.PanelSimple;
 import service.ImagenService;
 import panel.PanelBlending;
-import panel.PanelBufferAcumulacion;
+
 
 @SuppressWarnings("serial")
 public class MainFrame extends JFrame {
@@ -114,8 +120,12 @@ public class MainFrame extends JFrame {
 		tabs.addTab("Matriz Color", new PanelMatrizColor(imagenService, visor));
 		tabs.addTab("Histograma", new PanelHistograma(imagenService, visor));
 		tabs.addTab("Blending", new PanelBlending(imagenService, visor));
-		tabs.addTab("Operación con Fragmentos", new PanelBufferAcumulacion(  imagenService, visor));
-
+		tabs.addTab("Fragmentos", new PanelOperacionesFragmentos(imagenService, visor));
+		tabs.addTab("Rasterizador", new PanelRasterizador(imagenService, visor));
+		tabs.addTab("Renderizado 3D", new PanelRenderizado3D(imagenService, visor));
+		tabs.addTab("Operaciones Pixel", new PanelOperacionesPixel(imagenService, visor));
+		tabs.addTab("Filtro Separable", new PanelFiltroSeparable(imagenService, visor));
+		tabs.addTab("Ecualizador", new PanelEcualizador(imagenService, visor));
 		// Actualiza LCD
 		tabs.addChangeListener(e -> {
 			int i = tabs.getSelectedIndex();

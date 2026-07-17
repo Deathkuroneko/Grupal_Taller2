@@ -1,7 +1,6 @@
 package service;
 
 import java.awt.Color;
-import filtros.BufferAcumulacion;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -9,16 +8,22 @@ import java.io.File;
 import javax.imageio.ImageIO;
 
 import filtros.BlancoNegro;
+import filtros.Blending;
 import filtros.Colores;
 import filtros.Convoluciones;
 import filtros.Degradados;
+import filtros.EcualizadorHistograma;
 import filtros.EscalaGrisesN;
+import filtros.FiltroSeparable;
 import filtros.HSV;
 import filtros.MatrizColores;
 import filtros.Negativo;
+import filtros.Operaciones_Fragmentos;
 import filtros.ReducirBits;
 import filtros.Retro;
 import filtros.VidrioEsmerilado;
+import rasterizador.UtilRasterizador;
+import util.OperacionesPixel;
 
 public class ImagenService {
 
@@ -223,25 +228,79 @@ public class ImagenService {
 		if (!hayImagen() || imagenSecundaria == null)
 			return null;
 
-		imagenActual = filtros.Blending.aplicarBlending(imagenActual, imagenSecundaria, alpha, tipo);
+		imagenActual = Blending.aplicarBlending(imagenActual, imagenSecundaria, alpha, tipo);
 
 		return imagenActual;
 	}
 
 	// =====================OPERACIONES CON FRAGMENTOS=====================
-	public BufferedImage aplicarBufferAcumulacion(int muestras, int desplazamiento) {
-		if (!hayImagen())
-			return null;
-		imagenActual = BufferAcumulacion.aplicar(imagenActual, muestras, desplazamiento);
+	public BufferedImage aplicarFiltroFragmento(String efecto, int... params) {
+		switch (efecto) {
+		case "Z-Test":
+			return Operaciones_Fragmentos.aplicarZTest(imagenActual, params[0]);
+		case "Alpha Test":
+			return Operaciones_Fragmentos.aplicarAlphaTest(imagenActual, params[0]);
+		case "Alpha To Coverage":
+			return Operaciones_Fragmentos.aplicarAlphaToCoverage(imagenActual, params[0]);
+		case "Día a Noche":
+			float factor = params[0] / 255.0f;
+			return Operaciones_Fragmentos.diaANoche(imagenActual, factor);
+		case "Efecto Estela":
+			return Operaciones_Fragmentos.aplicarEfectoEstela(imagenActual, params[0], params[1]);
+		default:
+			return imagenActual;
+		}
+	}
+
+	// =====================RASTERIZADOR=====================
+	public BufferedImage aplicarRasterizador(int modo, int ancho, int alto) {
+		if (imagenOriginal == null) {
+			imagenActual = UtilRasterizador.renderizar(modo, ancho, alto, null);
+		} else {
+			imagenActual = UtilRasterizador.renderizar(modo, ancho, alto, imagenOriginal);
+		}
 		return imagenActual;
 	}
 
-	public BufferedImage aplicarDiaNoche(float factor) {
-		if (!hayImagen())
-			return null;
-		imagenActual = BufferAcumulacion.diaANoche(imagenOriginal, factor);
-		return imagenActual;
+	// =====================STENCIL=====================
+	public BufferedImage generarStencil() {
+        if (imagenActual == null) return null;
+        int w = imagenActual.getWidth();
+        int h = imagenActual.getHeight();
+        return OperacionesPixel.generarStencil(w, h);
+    }
+
+	public BufferedImage aplicarStencil(BufferedImage imagen, BufferedImage stencil, int umbral) {
+	    if (imagen == null || stencil == null) return null;
+	    return OperacionesPixel.aplicarStencil(imagen, stencil, umbral);
 	}
+
+    public BufferedImage operacionLogica(BufferedImage segundaImagen, String operacion) {
+        if (imagenActual == null || segundaImagen == null) return null;
+        return OperacionesPixel.operacionLogica(imagenActual, segundaImagen, operacion);
+    }
+
+
+    public BufferedImage operacionNOT() {
+        if (imagenActual == null) return null;
+        return OperacionesPixel.operacionLogica(imagenActual, null, "NOT");
+    }
+
+
+    public BufferedImage blending(BufferedImage segundaImagen, float alpha) {
+        if (imagenActual == null || segundaImagen == null) return null;
+        return OperacionesPixel.blending(imagenActual, segundaImagen, alpha);
+    }
+	 // =====================FILTROSEPARABLE=====================
+    public BufferedImage aplicarFiltroSeparable(int iteraciones) {
+        if (imagenActual == null) return null;
+        return FiltroSeparable.aplicarFiltroSeparable(imagenActual, iteraciones);
+    }
+	 // =====================Ecualizador=====================    
+    public BufferedImage aplicarEcualizacion(float factor) {
+        if (imagenActual == null) return null;
+        return EcualizadorHistograma.ecualizar(imagenActual, factor);
+    }
 	// ===================== UTIL =====================
 
 	private BufferedImage deepCopy(BufferedImage original) {
