@@ -22,6 +22,7 @@ import javax.swing.border.LineBorder;
 
 import panel.PanelBits;
 import panel.PanelColor;
+import panel.PanelConversorCMYK;
 import panel.PanelConvoluciones;
 import panel.PanelDegradados;
 import panel.PanelEcualizador;
@@ -126,6 +127,7 @@ public class MainFrame extends JFrame {
 		tabs.addTab("Operaciones Pixel", new PanelOperacionesPixel(imagenService, visor));
 		tabs.addTab("Filtro Separable", new PanelFiltroSeparable(imagenService, visor));
 		tabs.addTab("Ecualizador", new PanelEcualizador(imagenService, visor));
+		tabs.addTab("Conversor CMYK", new PanelConversorCMYK(imagenService, visor));
 		// Actualiza LCD
 		tabs.addChangeListener(e -> {
 			int i = tabs.getSelectedIndex();

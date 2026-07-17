@@ -264,43 +264,58 @@ public class ImagenService {
 
 	// =====================STENCIL=====================
 	public BufferedImage generarStencil() {
-        if (imagenActual == null) return null;
-        int w = imagenActual.getWidth();
-        int h = imagenActual.getHeight();
-        return OperacionesPixel.generarStencil(w, h);
-    }
-
-	public BufferedImage aplicarStencil(BufferedImage imagen, BufferedImage stencil, int umbral) {
-	    if (imagen == null || stencil == null) return null;
-	    return OperacionesPixel.aplicarStencil(imagen, stencil, umbral);
+		if (imagenActual == null)
+			return null;
+		int w = imagenActual.getWidth();
+		int h = imagenActual.getHeight();
+		return OperacionesPixel.generarStencil(w, h);
 	}
 
-    public BufferedImage operacionLogica(BufferedImage segundaImagen, String operacion) {
-        if (imagenActual == null || segundaImagen == null) return null;
-        return OperacionesPixel.operacionLogica(imagenActual, segundaImagen, operacion);
-    }
+	public BufferedImage aplicarStencil(BufferedImage imagen, BufferedImage stencil, int umbral) {
+		if (imagen == null || stencil == null)
+			return null;
+		return OperacionesPixel.aplicarStencil(imagen, stencil, umbral);
+	}
 
+	public BufferedImage operacionLogica(BufferedImage segundaImagen, String operacion) {
+		if (imagenActual == null || segundaImagen == null)
+			return null;
+		return OperacionesPixel.operacionLogica(imagenActual, segundaImagen, operacion);
+	}
 
-    public BufferedImage operacionNOT() {
-        if (imagenActual == null) return null;
-        return OperacionesPixel.operacionLogica(imagenActual, null, "NOT");
-    }
+	public BufferedImage operacionNOT() {
+		if (imagenActual == null)
+			return null;
+		return OperacionesPixel.operacionLogica(imagenActual, null, "NOT");
+	}
 
+	public BufferedImage blending(BufferedImage segundaImagen, float alpha) {
+		if (imagenActual == null || segundaImagen == null)
+			return null;
+		return OperacionesPixel.blending(imagenActual, segundaImagen, alpha);
+	}
 
-    public BufferedImage blending(BufferedImage segundaImagen, float alpha) {
-        if (imagenActual == null || segundaImagen == null) return null;
-        return OperacionesPixel.blending(imagenActual, segundaImagen, alpha);
-    }
-	 // =====================FILTROSEPARABLE=====================
-    public BufferedImage aplicarFiltroSeparable(int iteraciones) {
-        if (imagenActual == null) return null;
-        return FiltroSeparable.aplicarFiltroSeparable(imagenActual, iteraciones);
-    }
-	 // =====================Ecualizador=====================    
-    public BufferedImage aplicarEcualizacion(float factor) {
-        if (imagenActual == null) return null;
-        return EcualizadorHistograma.ecualizar(imagenActual, factor);
-    }
+	// =====================FILTROSEPARABLE=====================
+	public BufferedImage aplicarFiltroSeparable(int iteraciones) {
+		if (imagenActual == null)
+			return null;
+		return FiltroSeparable.aplicarFiltroSeparable(imagenActual, iteraciones);
+	}
+
+	// =====================Ecualizador=====================
+	public BufferedImage aplicarEcualizacion(float factor) {
+		if (imagenActual == null)
+			return null;
+		return EcualizadorHistograma.ecualizar(imagenActual, factor);
+	}
+
+	// =====================CMYK=====================
+	public BufferedImage convertirACmyk() {
+		if (imagenActual == null)
+			return null;
+		return util.ConversorCMYK.rgbToCmykSimulado(imagenActual);
+	}
+
 	// ===================== UTIL =====================
 
 	private BufferedImage deepCopy(BufferedImage original) {
